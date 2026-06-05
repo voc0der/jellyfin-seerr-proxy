@@ -1,13 +1,13 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Mime;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.SeerrProxy.Configuration;
 using Jellyfin.Plugin.SeerrProxy.Models;
 using Jellyfin.Plugin.SeerrProxy.Seerr;
 using MediaBrowser.Common.Api;
+using MediaBrowser.Controller.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,19 +24,23 @@ namespace Jellyfin.Plugin.SeerrProxy.Api;
 [Produces(MediaTypeNames.Application.Json)]
 public class SeerrProxyController : ControllerBase
 {
-    private const string JellyfinUserIdClaimType = "Jellyfin-UserId";
-
     private readonly ISeerrClient _seerrClient;
+    private readonly IAuthorizationContext _authorizationContext;
     private readonly ILogger<SeerrProxyController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SeerrProxyController"/> class.
     /// </summary>
     /// <param name="seerrClient">Seerr API client.</param>
+    /// <param name="authorizationContext">Jellyfin authorization context.</param>
     /// <param name="logger">Logger.</param>
-    public SeerrProxyController(ISeerrClient seerrClient, ILogger<SeerrProxyController> logger)
+    public SeerrProxyController(
+        ISeerrClient seerrClient,
+        IAuthorizationContext authorizationContext,
+        ILogger<SeerrProxyController> logger)
     {
         _seerrClient = seerrClient;
+        _authorizationContext = authorizationContext;
         _logger = logger;
     }
 
@@ -50,7 +54,7 @@ public class SeerrProxyController : ControllerBase
     public async Task<ActionResult<SeerrProxyStatusResponse>> GetStatus(CancellationToken cancellationToken)
     {
         var configuration = GetConfiguration();
-        var jellyfinUser = GetAuthenticatedJellyfinUser();
+        var jellyfinUser = await GetAuthenticatedJellyfinUser().ConfigureAwait(false);
         if (jellyfinUser is null)
         {
             return Unauthorized(Error(StatusCodes.Status401Unauthorized, "MissingJellyfinUser", "Authenticated request is not associated with a Jellyfin user."));
@@ -112,7 +116,7 @@ public class SeerrProxyController : ControllerBase
             return disabledOrUnconfigured;
         }
 
-        var jellyfinUser = GetAuthenticatedJellyfinUser();
+        var jellyfinUser = await GetAuthenticatedJellyfinUser().ConfigureAwait(false);
         if (jellyfinUser is null)
         {
             return Unauthorized(Error(StatusCodes.Status401Unauthorized, "MissingJellyfinUser", "Authenticated request is not associated with a Jellyfin user."));
@@ -147,7 +151,7 @@ public class SeerrProxyController : ControllerBase
             return disabledOrUnconfigured;
         }
 
-        var jellyfinUser = GetAuthenticatedJellyfinUser();
+        var jellyfinUser = await GetAuthenticatedJellyfinUser().ConfigureAwait(false);
         if (jellyfinUser is null)
         {
             return Unauthorized(Error(StatusCodes.Status401Unauthorized, "MissingJellyfinUser", "Authenticated request is not associated with a Jellyfin user."));
@@ -248,29 +252,17 @@ public class SeerrProxyController : ControllerBase
         return null;
     }
 
-    private AuthenticatedJellyfinUser? GetAuthenticatedJellyfinUser()
+    private async Task<AuthenticatedJellyfinUser?> GetAuthenticatedJellyfinUser()
     {
-        var userIdValue = User.Claims.FirstOrDefault(
-            claim => claim.Type.Equals(JellyfinUserIdClaimType, StringComparison.OrdinalIgnoreCase))?.Value;
-
-        if (string.IsNullOrWhiteSpace(userIdValue))
+        var authorizationInfo = await _authorizationContext.GetAuthorizationInfo(HttpContext).ConfigureAwait(false);
+        if (authorizationInfo.UserId.Equals(Guid.Empty))
         {
             return null;
         }
 
-        if (!Guid.TryParseExact(userIdValue, "N", out var userId)
-            && !Guid.TryParse(userIdValue, out userId))
-        {
-            return null;
-        }
-
-        if (userId == Guid.Empty)
-        {
-            return null;
-        }
-
-        var displayName = User.FindFirstValue(ClaimTypes.Name);
-        return new AuthenticatedJellyfinUser(userId.ToString("N", CultureInfo.InvariantCulture), displayName);
+        return new AuthenticatedJellyfinUser(
+            authorizationInfo.UserId.ToString("N", CultureInfo.InvariantCulture),
+            authorizationInfo.User?.Username);
     }
 
     private bool TryBuildSeerrRequestPayload(
