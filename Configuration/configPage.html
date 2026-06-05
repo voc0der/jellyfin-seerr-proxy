@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seerr Proxy</title>
+</head>
+<body>
+    <div id="SeerrProxyConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="SeerrProxyConfigForm" onsubmit="return window.SeerrProxyConfigSubmit(event, this);">
+                    <div class="verticalSection">
+                        <h2 class="sectionTitle">Seerr Proxy Settings</h2>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input id="chkEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable Seerr Proxy</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Authenticated proxy endpoints are available only when enabled.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="txtSeerrBaseUrl">Seerr Base URL</label>
+                            <input id="txtSeerrBaseUrl" type="url" class="emby-input" />
+                            <div class="fieldDescription">
+                                Example: http://jellyseerr:5055 or https://requests.example.com
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="txtSeerrApiKey">Seerr API Key</label>
+                            <input id="txtSeerrApiKey" type="password" class="emby-input" autocomplete="off" />
+                            <div class="fieldDescription">
+                                Stored server-side in Jellyfin. Clients never receive this key.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="txtRequestTimeoutSeconds">Request Timeout Seconds</label>
+                            <input id="txtRequestTimeoutSeconds" type="number" min="1" max="300"
+                                   pattern="[0-9]*" class="emby-input" />
+                        </div>
+
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="selectDefaultTvRequestBehavior">Default TV Request Behavior</label>
+                            <select is="emby-select" id="selectDefaultTvRequestBehavior" class="emby-select-withcolor emby-select">
+                                <option value="FirstSeasonOnly">First season only</option>
+                                <option value="AllSeasons">All seasons</option>
+                                <option value="ClientSpecifiedSeasons">Client-specified seasons</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection" style="margin-top: 2em;">
+                        <h2 class="sectionTitle">Connection Test</h2>
+                        <div style="margin-bottom: 1em;">
+                            <button id="btnTestConnection" is="emby-button" type="button" class="raised block emby-button">
+                                <span>Test Connection</span>
+                            </button>
+                        </div>
+                        <div id="testConnectionResult" class="fieldDescription"></div>
+                    </div>
+
+                    <div>
+                        <button id="btnSave" is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+        var SeerrProxyConfig = {
+            pluginId: '1ac3cf0f-f0f9-443a-be08-be38e48ff683'
+        };
+
+        function getConfigValue(config, pascalKey, camelKey, fallbackValue) {
+            if (config && config[pascalKey] !== undefined && config[pascalKey] !== null) {
+                return config[pascalKey];
+            }
+
+            if (config && config[camelKey] !== undefined && config[camelKey] !== null) {
+                return config[camelKey];
+            }
+
+            return fallbackValue;
+        }
+
+        function setConfigValue(config, pascalKey, camelKey, value) {
+            if (config && Object.prototype.hasOwnProperty.call(config, pascalKey)) {
+                config[pascalKey] = value;
+                return;
+            }
+
+            if (config && Object.prototype.hasOwnProperty.call(config, camelKey)) {
+                config[camelKey] = value;
+                return;
+            }
+
+            config[pascalKey] = value;
+        }
+
+        function getSanitizedTimeoutSeconds() {
+            var parsed = parseInt(document.getElementById('txtRequestTimeoutSeconds').value, 10);
+            if (!Number.isFinite(parsed)) {
+                return 30;
+            }
+
+            if (parsed < 1) {
+                return 1;
+            }
+
+            if (parsed > 300) {
+                return 300;
+            }
+
+            return parsed;
+        }
+
+        function setTestConnectionResult(message) {
+            document.getElementById('testConnectionResult').textContent = message || '';
+        }
+
+        document.getElementById('SeerrProxyConfigPage').addEventListener('pageshow', function () {
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(SeerrProxyConfig.pluginId).then(function (config) {
+                document.getElementById('chkEnabled').checked = !!getConfigValue(config, 'Enabled', 'enabled', false);
+                document.getElementById('txtSeerrBaseUrl').value = getConfigValue(config, 'SeerrBaseUrl', 'seerrBaseUrl', '') || '';
+                document.getElementById('txtSeerrApiKey').value = getConfigValue(config, 'SeerrApiKey', 'seerrApiKey', '') || '';
+                document.getElementById('txtRequestTimeoutSeconds').value = getConfigValue(
+                    config,
+                    'RequestTimeoutSeconds',
+                    'requestTimeoutSeconds',
+                    30);
+                document.getElementById('selectDefaultTvRequestBehavior').value = getConfigValue(
+                    config,
+                    'DefaultTvRequestBehavior',
+                    'defaultTvRequestBehavior',
+                    'FirstSeasonOnly');
+                setTestConnectionResult('');
+                Dashboard.hideLoadingMsg();
+            }).catch(function () {
+                Dashboard.hideLoadingMsg();
+                Dashboard.alert('Failed to load Seerr Proxy configuration.');
+            });
+        });
+
+        window.SeerrProxyConfigSubmit = function (e) {
+            if (e && typeof e.preventDefault === 'function') {
+                e.preventDefault();
+            }
+
+            Dashboard.showLoadingMsg();
+
+            ApiClient.getPluginConfiguration(SeerrProxyConfig.pluginId).then(function (config) {
+                setConfigValue(config, 'Enabled', 'enabled', document.getElementById('chkEnabled').checked);
+                setConfigValue(config, 'SeerrBaseUrl', 'seerrBaseUrl', document.getElementById('txtSeerrBaseUrl').value);
+                setConfigValue(config, 'SeerrApiKey', 'seerrApiKey', document.getElementById('txtSeerrApiKey').value);
+                setConfigValue(config, 'RequestTimeoutSeconds', 'requestTimeoutSeconds', getSanitizedTimeoutSeconds());
+                setConfigValue(
+                    config,
+                    'DefaultTvRequestBehavior',
+                    'defaultTvRequestBehavior',
+                    document.getElementById('selectDefaultTvRequestBehavior').value);
+
+                ApiClient.updatePluginConfiguration(SeerrProxyConfig.pluginId, config).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                }).catch(function () {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Failed to save Seerr Proxy configuration.');
+                });
+            }).catch(function () {
+                Dashboard.hideLoadingMsg();
+                Dashboard.alert('Failed to load Seerr Proxy configuration.');
+            });
+
+            return false;
+        };
+
+        document.getElementById('btnTestConnection').addEventListener('click', function () {
+            Dashboard.showLoadingMsg();
+            setTestConnectionResult('');
+
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('Plugins/SeerrProxy/Test')
+            }).then(function (response) {
+                var message = response && (response.message || response.Message)
+                    ? response.message || response.Message
+                    : 'Successfully connected to Seerr.';
+                setTestConnectionResult(message);
+                Dashboard.hideLoadingMsg();
+            }).catch(function () {
+                setTestConnectionResult('Connection test failed. Save settings first, then check the Jellyfin server log for details.');
+                Dashboard.hideLoadingMsg();
+            });
+        });
+        </script>
+    </div>
+</body>
+</html>
