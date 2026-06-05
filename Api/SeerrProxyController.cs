@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Mime;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.SeerrProxy.Configuration;
@@ -192,6 +193,82 @@ public class SeerrProxyController : ControllerBase
     }
 
     /// <summary>
+    /// Forwards allowlisted Seerr API requests as the current Jellyfin user's linked Seerr user.
+    /// </summary>
+    /// <param name="path">Seerr API path under /api/v1.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Seerr API response.</returns>
+    [AcceptVerbs("GET", "PUT", "DELETE")]
+    [Route("Api/{**path}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ForwardApiRequest([FromRoute] string? path, CancellationToken cancellationToken)
+    {
+        var normalizedPath = NormalizeApiPath(path);
+        if (!IsAllowedApiProxyRequest(Request.Method, normalizedPath))
+        {
+            return NotFound(Error(StatusCodes.Status404NotFound, "UnsupportedProxyEndpoint", "This Seerr API endpoint is not available through the Jellyfin proxy."));
+        }
+
+        var configuration = GetConfiguration();
+        var disabledOrUnconfigured = EnsureEnabledAndConfigured(configuration);
+        if (disabledOrUnconfigured is not null)
+        {
+            return disabledOrUnconfigured;
+        }
+
+        var jellyfinUser = await GetAuthenticatedJellyfinUser().ConfigureAwait(false);
+        if (jellyfinUser is null)
+        {
+            return Unauthorized(Error(StatusCodes.Status401Unauthorized, "MissingJellyfinUser", "Authenticated request is not associated with a Jellyfin user."));
+        }
+
+        SeerrUser seerrUser;
+        try
+        {
+            seerrUser = await _seerrClient.GetUserByJellyfinIdAsync(configuration, jellyfinUser.UserId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (HandleProxyException(ex, out var resolveError))
+        {
+            return resolveError;
+        }
+
+        JsonNode? payload = null;
+        if (HttpMethods.IsPut(Request.Method))
+        {
+            try
+            {
+                payload = await ReadJsonBody(cancellationToken).ConfigureAwait(false);
+            }
+            catch (JsonException)
+            {
+                return BadRequest(Error(StatusCodes.Status400BadRequest, "InvalidJson", "Request body must be valid JSON."));
+            }
+        }
+
+        var relativePath = normalizedPath + Request.QueryString.Value;
+        try
+        {
+            var result = await _seerrClient.ForwardApiRequestAsync(
+                    configuration,
+                    seerrUser.Id,
+                    new HttpMethod(Request.Method),
+                    relativePath,
+                    payload,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            return result.Body is null
+                ? StatusCode(result.StatusCode)
+                : StatusCode(result.StatusCode, result.Body);
+        }
+        catch (Exception ex) when (HandleProxyException(ex, out var actionResult, notFoundMeansUnlinked: false))
+        {
+            return actionResult;
+        }
+    }
+
+    /// <summary>
     /// Tests Seerr reachability and the configured API key.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -263,6 +340,114 @@ public class SeerrProxyController : ControllerBase
         return new AuthenticatedJellyfinUser(
             authorizationInfo.UserId.ToString("N", CultureInfo.InvariantCulture),
             authorizationInfo.User?.Username);
+    }
+
+    private async Task<JsonNode?> ReadJsonBody(CancellationToken cancellationToken)
+    {
+        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        var body = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        return string.IsNullOrWhiteSpace(body) ? null : JsonNode.Parse(body);
+    }
+
+    private static string NormalizeApiPath(string? path)
+    {
+        return (path ?? string.Empty).Trim('/');
+    }
+
+    private static bool IsAllowedApiProxyRequest(string method, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (segments.Length == 0)
+        {
+            return false;
+        }
+
+        if (HttpMethods.IsGet(method))
+        {
+            return IsAllowedApiProxyGet(segments);
+        }
+
+        if (HttpMethods.IsPut(method) || HttpMethods.IsDelete(method))
+        {
+            return IsRequestById(segments);
+        }
+
+        return false;
+    }
+
+    private static bool IsAllowedApiProxyGet(IReadOnlyList<string> segments)
+    {
+        if (SegmentsEqual(segments, "auth", "me") || SegmentsEqual(segments, "settings", "public"))
+        {
+            return true;
+        }
+
+        if (SegmentEquals(segments[0], "search"))
+        {
+            return segments.Count == 1;
+        }
+
+        if (SegmentEquals(segments[0], "discover"))
+        {
+            return segments.Count >= 2;
+        }
+
+        if (SegmentEquals(segments[0], "movie"))
+        {
+            return IsMediaDetailsPath(segments, "recommendations", "similar", "ratings", "ratingscombined");
+        }
+
+        if (SegmentEquals(segments[0], "tv"))
+        {
+            return IsMediaDetailsPath(segments, "recommendations", "similar", "ratings")
+                || (segments.Count == 4 && IsPositiveInt(segments[1]) && SegmentEquals(segments[2], "season") && IsPositiveInt(segments[3]));
+        }
+
+        if (SegmentEquals(segments[0], "person"))
+        {
+            return (segments.Count == 2 && IsPositiveInt(segments[1]))
+                || (segments.Count == 3 && IsPositiveInt(segments[1]) && SegmentEquals(segments[2], "combined_credits"));
+        }
+
+        if (SegmentEquals(segments[0], "request"))
+        {
+            return segments.Count == 1 || IsRequestById(segments);
+        }
+
+        return false;
+    }
+
+    private static bool IsMediaDetailsPath(IReadOnlyList<string> segments, params string[] allowedSubpaths)
+    {
+        return segments.Count == 2 && IsPositiveInt(segments[1])
+            || segments.Count == 3
+            && IsPositiveInt(segments[1])
+            && allowedSubpaths.Any(subpath => SegmentEquals(segments[2], subpath));
+    }
+
+    private static bool IsRequestById(IReadOnlyList<string> segments)
+    {
+        return segments.Count == 2 && SegmentEquals(segments[0], "request") && IsPositiveInt(segments[1]);
+    }
+
+    private static bool SegmentsEqual(IReadOnlyList<string> segments, string first, string second)
+    {
+        return segments.Count == 2 && SegmentEquals(segments[0], first) && SegmentEquals(segments[1], second);
+    }
+
+    private static bool SegmentEquals(string actual, string expected)
+    {
+        return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPositiveInt(string value)
+    {
+        return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var result) && result > 0;
     }
 
     private bool TryBuildSeerrRequestPayload(

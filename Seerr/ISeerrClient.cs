@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.SeerrProxy.Configuration;
 
@@ -48,5 +49,23 @@ public interface ISeerrClient
         PluginConfiguration configuration,
         int seerrUserId,
         JsonObject payload,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Forwards an allowed Seerr API request as the supplied Seerr user.
+    /// </summary>
+    /// <param name="configuration">Plugin configuration.</param>
+    /// <param name="seerrUserId">Linked Seerr user ID.</param>
+    /// <param name="method">HTTP method.</param>
+    /// <param name="relativePath">Relative Seerr API path, including query string if present.</param>
+    /// <param name="payload">Optional JSON request payload.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Raw Seerr API result.</returns>
+    Task<SeerrApiResult> ForwardApiRequestAsync(
+        PluginConfiguration configuration,
+        int seerrUserId,
+        HttpMethod method,
+        string relativePath,
+        JsonNode? payload,
         CancellationToken cancellationToken);
 }

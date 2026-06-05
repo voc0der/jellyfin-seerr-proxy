@@ -10,6 +10,7 @@ The plugin keeps Seerr credentials on the Jellyfin server. A client such as Whol
 - Resolves the current Jellyfin user from Jellyfin authentication claims.
 - Looks up the linked Seerr user with `GET /api/v1/user/jellyfin/{jellyfinUserId}`.
 - Creates requests with `POST /api/v1/request`.
+- Proxies allowlisted Seerr discovery API calls for linked Jellyfin users.
 - Sends `X-Api-Key` and `X-API-User` only from server-side plugin configuration and resolved identity.
 - Returns clear JSON errors suitable for TV clients.
 
@@ -79,6 +80,23 @@ Example TV request:
 The plugin accepts either `mediaId` or `tmdbId` and sends Seerr's `mediaId`. It passes only safe Seerr request fields: `mediaType`, `mediaId`, `tvdbId`, `seasons`, `is4k`, `serverId`, `profileId`, `rootFolder`, `languageProfileId`, and `tags`.
 
 Client-provided identity fields are ignored. Do not send `userId` or `X-API-User`; the plugin derives the requester from Jellyfin authentication only.
+
+### `/Plugins/SeerrProxy/Api/{path}`
+
+Allowlisted passthrough for clients that need Seerr discovery data without storing Seerr credentials locally. The plugin forwards these requests to `/api/v1/{path}` with `X-Api-Key` and `X-API-User` set server-side.
+
+Supported methods and route families:
+
+- `GET auth/me`
+- `GET settings/public`
+- `GET search`
+- `GET discover/...`
+- `GET movie/{id}`, `movie/{id}/recommendations`, `movie/{id}/similar`, `movie/{id}/ratings`
+- `GET tv/{id}`, `tv/{id}/recommendations`, `tv/{id}/similar`, `tv/{id}/ratings`, `tv/{id}/season/{season}`
+- `GET person/{id}`, `person/{id}/combined_credits`
+- `GET request`, `GET request/{id}`
+- `PUT request/{id}`
+- `DELETE request/{id}`
 
 ### `POST /Plugins/SeerrProxy/Test`
 
