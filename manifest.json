@@ -1,0 +1,20 @@
+[
+  {
+    "category": "General",
+    "guid": "1ac3cf0f-f0f9-443a-be08-be38e48ff683",
+    "name": "Seerr Proxy",
+    "description": "Authenticated Jellyfin request proxy for Seerr/Jellyseerr. Jellyfin clients can submit Seerr media requests as the currently authenticated Jellyfin user without receiving Seerr credentials.",
+    "owner": "voc0der",
+    "overview": "Submit Seerr requests from Jellyfin clients",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release\n- Authenticated Jellyfin endpoints for status, linked user lookup, and media requests\n- Server-side Seerr API key storage\n- Jellyfin user to Seerr user resolution through /api/v1/user/jellyfin/{jellyfinUserId}\n- Seerr requests submitted with server-derived X-API-User\n- Dashboard configuration page",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/voc0der/jellyfin-seerr-proxy/releases/download/1.0.0.0/Seerr_Proxy_1.0.0.0.zip",
+        "checksum": "PLACEHOLDER",
+        "timestamp": "2026-06-05T00:00:00Z"
+      }
+    ]
+  }
+]
