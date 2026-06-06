@@ -91,3 +91,16 @@ The plugin DLL is written to `bin/Release/net9.0/Jellyfin.Plugin.SeerrProxy.dll`
 ## Release Metadata
 
 `manifest.json` is updated by the release workflow when a new version is published.
+
+
+## Star History
+
+<p align="center">
+  <a href="https://star-history.com/#voc0der/jellyfin-seerr-proxy&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voc0der/jellyfin-seerr-proxy&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voc0der/jellyfin-seerr-proxy&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voc0der/jellyfin-seerr-proxy&type=Date" />
+    </picture>
+  </a>
+</p>
