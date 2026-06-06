@@ -198,8 +198,8 @@ public class SeerrProxyController : ControllerBase
     /// <param name="path">Seerr API path under /api/v1.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Seerr API response.</returns>
-    [AcceptVerbs("GET", "PUT", "DELETE")]
-    [Route("Api/{**path}")]
+    [AcceptVerbs("GET", "POST", "PUT", "DELETE")]
+    [Route("api/v1/{**path}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ForwardApiRequest([FromRoute] string? path, CancellationToken cancellationToken)
     {
@@ -234,7 +234,7 @@ public class SeerrProxyController : ControllerBase
         }
 
         JsonNode? payload = null;
-        if (HttpMethods.IsPut(Request.Method))
+        if (HttpMethods.IsPost(Request.Method) || HttpMethods.IsPut(Request.Method))
         {
             try
             {
@@ -370,6 +370,11 @@ public class SeerrProxyController : ControllerBase
         if (HttpMethods.IsGet(method))
         {
             return IsAllowedApiProxyGet(segments);
+        }
+
+        if (HttpMethods.IsPost(method))
+        {
+            return segments.Length == 1 && SegmentEquals(segments[0], "request");
         }
 
         if (HttpMethods.IsPut(method) || HttpMethods.IsDelete(method))
