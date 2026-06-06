@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/voc0der/jellyfin-seerr-proxy/main/icon.png",
     "versions": [
       {
+        "version": "1.0.0.6",
+        "changelog": "## What's Changed\n\n- fix: remove unsupported plugin image override (cf0508a)\n- chore: trigger release (3618596)\n- docs(plugin): clarify seerr proxy description (#5) (e021aaa)\n\n**Full Changelog**: https://github.com/voc0der/jellyfin-seerr-proxy/compare/1.0.0.5...1.0.0.6\n",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/voc0der/jellyfin-seerr-proxy/releases/download/1.0.0.6/Seerr_Proxy_1.0.0.6.zip",
+        "checksum": "fe9e70db619ac1c8de1869df76118a5f",
+        "timestamp": "2026-06-06T12:03:32Z"
+      },
+      {
         "version": "1.0.0.5",
         "changelog": "## What's Changed\n\n- refactor(proxy): remove legacy endpoints (#4) (2028438)\n\n**Full Changelog**: https://github.com/voc0der/jellyfin-seerr-proxy/compare/1.0.0.4...1.0.0.5\n",
         "targetAbi": "10.11.6.0",
