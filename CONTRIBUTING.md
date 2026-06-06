@@ -47,7 +47,7 @@ dotnet format style --verify-no-changes --severity warn
 
 - Search existing issues before opening a new one
 - Include Jellyfin version, plugin version, and relevant logs
-- Include Seerr/Jellyseerr version and whether the Jellyfin user is linked in Seerr
+- Include Seerr version and whether the Jellyfin user is linked in Seerr
 
 ## Pull Requests
 

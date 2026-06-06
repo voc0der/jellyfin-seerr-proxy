@@ -34,7 +34,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override Guid Id => PluginId;
 
     /// <inheritdoc />
-    public override string Description => "Authenticated Jellyfin request proxy for Seerr and Jellyseerr.";
+    public override string Description =>
+        "Authenticated Jellyfin transport for Seerr. Linked Jellyfin users can discover this plugin and call allowlisted Seerr API endpoints through Jellyfin without receiving Seerr credentials.";
 
     /// <summary>
     /// Gets the active plugin instance.

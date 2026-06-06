@@ -27,12 +27,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool Enabled { get; set; }
 
     /// <summary>
-    /// Gets or sets the Seerr/Jellyseerr base URL.
+    /// Gets or sets the Seerr base URL.
     /// </summary>
     public string SeerrBaseUrl { get; set; }
 
     /// <summary>
-    /// Gets or sets the Seerr/Jellyseerr API key.
+    /// Gets or sets the Seerr API key.
     /// </summary>
     public string SeerrApiKey { get; set; }
 
