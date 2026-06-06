@@ -5,7 +5,7 @@ using Jellyfin.Plugin.SeerrProxy.Configuration;
 namespace Jellyfin.Plugin.SeerrProxy.Seerr;
 
 /// <summary>
-/// Typed Seerr/Jellyseerr API client.
+/// Typed Seerr API client.
 /// </summary>
 public interface ISeerrClient
 {

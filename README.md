@@ -1,6 +1,6 @@
 # jellyfin-seerr-proxy
 
-`jellyfin-seerr-proxy` is a minimal Jellyfin plugin that lets authenticated Jellyfin clients use a safe subset of the Seerr/Jellyseerr API as the currently logged-in Jellyfin user.
+`jellyfin-seerr-proxy` is a minimal Jellyfin plugin that lets authenticated Jellyfin clients use a safe subset of the Seerr API as the currently logged-in Jellyfin user.
 
 The plugin keeps Seerr credentials on the Jellyfin server. A client such as Wholphin calls the Jellyfin plugin endpoint with its normal Jellyfin auth token; the plugin resolves that Jellyfin user to the linked Seerr user and forwards allowlisted Seerr API calls with `X-API-User` set server-side.
 
@@ -23,7 +23,7 @@ The plugin keeps Seerr credentials on the Jellyfin server. A client such as Whol
 
 ## Required Seerr Setup
 
-Jellyfin users must already be imported or linked in Seerr/Jellyseerr. The plugin does not create or link Seerr users.
+Jellyfin users must already be imported or linked in Seerr. The plugin does not create or link Seerr users.
 
 Create or copy a Seerr API key and store it in the Jellyfin plugin configuration page. Clients never need this key.
 

@@ -3,9 +3,10 @@
     "category": "General",
     "guid": "1ac3cf0f-f0f9-443a-be08-be38e48ff683",
     "name": "Seerr Proxy",
-    "description": "Authenticated Jellyfin request proxy for Seerr/Jellyseerr. Jellyfin clients can submit Seerr media requests as the currently authenticated Jellyfin user without receiving Seerr credentials.",
+    "description": "Authenticated Jellyfin transport for Seerr. Linked Jellyfin users can discover the plugin, call allowlisted Seerr API endpoints through Jellyfin, and submit requests as themselves without receiving Seerr credentials.",
     "owner": "voc0der",
-    "overview": "Submit Seerr requests from Jellyfin clients",
+    "overview": "Proxy Seerr API calls through Jellyfin authentication",
+    "imageUrl": "https://raw.githubusercontent.com/voc0der/jellyfin-seerr-proxy/main/icon.png",
     "versions": [
       {
         "version": "1.0.0.5",
