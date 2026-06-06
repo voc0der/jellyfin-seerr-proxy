@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" alt="jellyfin-seerr-proxy icon" width="180" />
+</p>
+
 # jellyfin-seerr-proxy
 
 `jellyfin-seerr-proxy` is a minimal Jellyfin plugin that lets authenticated Jellyfin clients use a safe subset of the Seerr API as the currently logged-in Jellyfin user.
