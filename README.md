@@ -55,10 +55,6 @@ Supported methods and route families:
 
 Client-provided identity fields and authentication headers are ignored. Do not send `userId`, `X-API-User`, cookies, or a Seerr API key; the plugin derives the requester from Jellyfin authentication only.
 
-### Legacy Endpoints
-
-`GET /Plugins/SeerrProxy/User` and `POST /Plugins/SeerrProxy/Request` remain for older clients. New clients should use `GET /Plugins/SeerrProxy/Status` for discovery and `/Plugins/SeerrProxy/api/v1/{path}` as their Seerr transport.
-
 ### `POST /Plugins/SeerrProxy/Test`
 
 Dashboard-only elevated endpoint used by the configuration page to test Seerr reachability and the configured API key.

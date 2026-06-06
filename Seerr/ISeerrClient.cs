@@ -38,20 +38,6 @@ public interface ISeerrClient
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Creates a Seerr media request as the supplied Seerr user.
-    /// </summary>
-    /// <param name="configuration">Plugin configuration.</param>
-    /// <param name="seerrUserId">Linked Seerr user ID.</param>
-    /// <param name="payload">Safe Seerr request payload.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Raw Seerr API result.</returns>
-    Task<SeerrApiResult> CreateRequestAsync(
-        PluginConfiguration configuration,
-        int seerrUserId,
-        JsonObject payload,
-        CancellationToken cancellationToken);
-
-    /// <summary>
     /// Forwards an allowed Seerr API request as the supplied Seerr user.
     /// </summary>
     /// <param name="configuration">Plugin configuration.</param>

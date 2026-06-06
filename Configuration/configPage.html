@@ -5,7 +5,7 @@
 </head>
 <body>
     <div id="SeerrProxyConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
-         data-require="emby-input,emby-button,emby-select,emby-checkbox">
+         data-require="emby-input,emby-button,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
                 <form id="SeerrProxyConfigForm" onsubmit="return window.SeerrProxyConfigSubmit(event, this);">
@@ -44,14 +44,6 @@
                                    pattern="[0-9]*" class="emby-input" />
                         </div>
 
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="selectDefaultTvRequestBehavior">Default TV Request Behavior</label>
-                            <select is="emby-select" id="selectDefaultTvRequestBehavior" class="emby-select-withcolor emby-select">
-                                <option value="FirstSeasonOnly">First season only</option>
-                                <option value="AllSeasons">All seasons</option>
-                                <option value="ClientSpecifiedSeasons">Client-specified seasons</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div class="verticalSection" style="margin-top: 2em;">
@@ -135,11 +127,6 @@
                     'RequestTimeoutSeconds',
                     'requestTimeoutSeconds',
                     30);
-                document.getElementById('selectDefaultTvRequestBehavior').value = getConfigValue(
-                    config,
-                    'DefaultTvRequestBehavior',
-                    'defaultTvRequestBehavior',
-                    'FirstSeasonOnly');
                 setTestConnectionResult('');
                 Dashboard.hideLoadingMsg();
             }).catch(function () {
@@ -160,12 +147,6 @@
                 setConfigValue(config, 'SeerrBaseUrl', 'seerrBaseUrl', document.getElementById('txtSeerrBaseUrl').value);
                 setConfigValue(config, 'SeerrApiKey', 'seerrApiKey', document.getElementById('txtSeerrApiKey').value);
                 setConfigValue(config, 'RequestTimeoutSeconds', 'requestTimeoutSeconds', getSanitizedTimeoutSeconds());
-                setConfigValue(
-                    config,
-                    'DefaultTvRequestBehavior',
-                    'defaultTvRequestBehavior',
-                    document.getElementById('selectDefaultTvRequestBehavior').value);
-
                 ApiClient.updatePluginConfiguration(SeerrProxyConfig.pluginId, config).then(function (result) {
                     Dashboard.processPluginConfigurationUpdateResult(result);
                 }).catch(function () {
