@@ -1,16 +1,15 @@
 # jellyfin-seerr-proxy
 
-`jellyfin-seerr-proxy` is a minimal Jellyfin plugin that lets authenticated Jellyfin clients submit Seerr/Jellyseerr media requests as the currently logged-in Jellyfin user.
+`jellyfin-seerr-proxy` is a minimal Jellyfin plugin that lets authenticated Jellyfin clients use a safe subset of the Seerr/Jellyseerr API as the currently logged-in Jellyfin user.
 
-The plugin keeps Seerr credentials on the Jellyfin server. A client such as Wholphin calls the Jellyfin plugin endpoint with its normal Jellyfin auth token; the plugin resolves that Jellyfin user to the linked Seerr user and submits the Seerr request with `X-API-User` set server-side.
+The plugin keeps Seerr credentials on the Jellyfin server. A client such as Wholphin calls the Jellyfin plugin endpoint with its normal Jellyfin auth token; the plugin resolves that Jellyfin user to the linked Seerr user and forwards allowlisted Seerr API calls with `X-API-User` set server-side.
 
 ## What It Does
 
 - Exposes authenticated Jellyfin endpoints under `/Plugins/SeerrProxy`.
 - Resolves the current Jellyfin user from Jellyfin authentication claims.
 - Looks up the linked Seerr user with `GET /api/v1/user/jellyfin/{jellyfinUserId}`.
-- Creates requests with `POST /api/v1/request`.
-- Proxies allowlisted Seerr discovery API calls for linked Jellyfin users.
+- Proxies allowlisted Seerr API calls for linked Jellyfin users.
 - Sends `X-Api-Key` and `X-API-User` only from server-side plugin configuration and resolved identity.
 - Returns clear JSON errors suitable for TV clients.
 
@@ -36,54 +35,9 @@ All endpoints require Jellyfin authentication.
 
 Returns plugin state and, when configured and enabled, whether the current Jellyfin user maps to a Seerr user. Secrets are never returned.
 
-### `GET /Plugins/SeerrProxy/User`
+### `/Plugins/SeerrProxy/api/v1/{path}`
 
-Returns a small linked-user projection:
-
-```json
-{
-  "jellyfinUserId": "00000000000000000000000000000000",
-  "seerrUserId": 7,
-  "displayName": "Bob",
-  "linked": true
-}
-```
-
-### `POST /Plugins/SeerrProxy/Request`
-
-Example movie request:
-
-```json
-{
-  "mediaType": "movie",
-  "tmdbId": 9481,
-  "is4k": false
-}
-```
-
-Example TV request:
-
-```json
-{
-  "mediaType": "tv",
-  "tmdbId": 1399,
-  "seasons": [1, 2],
-  "is4k": false,
-  "serverId": 1,
-  "profileId": 1,
-  "rootFolder": "/tv",
-  "languageProfileId": 1,
-  "tags": []
-}
-```
-
-The plugin accepts either `mediaId` or `tmdbId` and sends Seerr's `mediaId`. It passes only safe Seerr request fields: `mediaType`, `mediaId`, `tvdbId`, `seasons`, `is4k`, `serverId`, `profileId`, `rootFolder`, `languageProfileId`, and `tags`.
-
-Client-provided identity fields are ignored. Do not send `userId` or `X-API-User`; the plugin derives the requester from Jellyfin authentication only.
-
-### `/Plugins/SeerrProxy/Api/{path}`
-
-Allowlisted passthrough for clients that need Seerr discovery data without storing Seerr credentials locally. The plugin forwards these requests to `/api/v1/{path}` with `X-Api-Key` and `X-API-User` set server-side.
+Allowlisted passthrough for clients that need Seerr data or requests without storing Seerr credentials locally. The plugin forwards these requests to Seerr's `/api/v1/{path}` with `X-Api-Key` and `X-API-User` set server-side.
 
 Supported methods and route families:
 
@@ -95,22 +49,19 @@ Supported methods and route families:
 - `GET tv/{id}`, `tv/{id}/recommendations`, `tv/{id}/similar`, `tv/{id}/ratings`, `tv/{id}/season/{season}`
 - `GET person/{id}`, `person/{id}/combined_credits`
 - `GET request`, `GET request/{id}`
+- `POST request`
 - `PUT request/{id}`
 - `DELETE request/{id}`
+
+Client-provided identity fields and authentication headers are ignored. Do not send `userId`, `X-API-User`, cookies, or a Seerr API key; the plugin derives the requester from Jellyfin authentication only.
+
+### Legacy Endpoints
+
+`GET /Plugins/SeerrProxy/User` and `POST /Plugins/SeerrProxy/Request` remain for older clients. New clients should use `GET /Plugins/SeerrProxy/Status` for discovery and `/Plugins/SeerrProxy/api/v1/{path}` as their Seerr transport.
 
 ### `POST /Plugins/SeerrProxy/Test`
 
 Dashboard-only elevated endpoint used by the configuration page to test Seerr reachability and the configured API key.
-
-## TV Season Defaults
-
-When a TV request omits `seasons`, the plugin uses the configured default:
-
-- First season only
-- All seasons
-- Require client-specified seasons
-
-When a client provides explicit seasons, those seasons are used.
 
 ## Installation
 
