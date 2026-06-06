@@ -3,27 +3,6 @@ using MediaBrowser.Model.Plugins;
 namespace Jellyfin.Plugin.SeerrProxy.Configuration;
 
 /// <summary>
-/// Default behavior for TV requests when the client does not provide seasons.
-/// </summary>
-public enum TvRequestBehavior
-{
-    /// <summary>
-    /// Request season one when no client seasons are provided.
-    /// </summary>
-    FirstSeasonOnly,
-
-    /// <summary>
-    /// Request all seasons when no client seasons are provided.
-    /// </summary>
-    AllSeasons,
-
-    /// <summary>
-    /// Require clients to provide explicit seasons.
-    /// </summary>
-    ClientSpecifiedSeasons
-}
-
-/// <summary>
 /// Seerr Proxy plugin configuration.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
@@ -40,7 +19,6 @@ public class PluginConfiguration : BasePluginConfiguration
         SeerrBaseUrl = string.Empty;
         SeerrApiKey = string.Empty;
         RequestTimeoutSeconds = DefaultTimeoutSeconds;
-        DefaultTvRequestBehavior = TvRequestBehavior.FirstSeasonOnly;
     }
 
     /// <summary>
@@ -62,11 +40,6 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets the outbound Seerr request timeout in seconds.
     /// </summary>
     public int RequestTimeoutSeconds { get; set; }
-
-    /// <summary>
-    /// Gets or sets the default TV request behavior.
-    /// </summary>
-    public TvRequestBehavior DefaultTvRequestBehavior { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether the required Seerr connection settings are present.

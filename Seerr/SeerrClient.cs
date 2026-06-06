@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net;
-using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -70,24 +69,6 @@ public sealed class SeerrClient : ISeerrClient
         }
 
         return user;
-    }
-
-    /// <inheritdoc />
-    public async Task<SeerrApiResult> CreateRequestAsync(
-        PluginConfiguration configuration,
-        int seerrUserId,
-        JsonObject payload,
-        CancellationToken cancellationToken)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Post, BuildUri(configuration, "request"))
-        {
-            Content = JsonContent.Create(payload)
-        };
-        AddApiKey(request, configuration);
-        request.Headers.TryAddWithoutValidation("X-API-User", seerrUserId.ToString(CultureInfo.InvariantCulture));
-
-        var result = await SendAsync(configuration, request, cancellationToken).ConfigureAwait(false);
-        return new SeerrApiResult(result.StatusCode, ParseJson(result.BodyText));
     }
 
     /// <inheritdoc />
