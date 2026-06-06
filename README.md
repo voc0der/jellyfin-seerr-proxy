@@ -27,9 +27,8 @@ The plugin keeps Seerr credentials on the Jellyfin server. A client such as Whol
 
 ## Required Seerr Setup
 
-Jellyfin users must already be imported or linked in Seerr. The plugin does not create or link Seerr users.
-
-Create or copy a Seerr API key and store it in the Jellyfin plugin configuration page. Clients never need this key.
+- Configure Seerr connection string in the Jellyfin plugin settings and give Jellyfin Seerr's API key.
+- Jellyfin users must already be imported or linked in Seerr. The plugin does not create or link Seerr users.
 
 ## Endpoints
 
@@ -78,20 +77,8 @@ Dashboard-only elevated endpoint used by the configuration page to test Seerr re
 2. Extract it into your Jellyfin plugins directory
 3. Restart Jellyfin
 
-## Building
-
-Install the .NET 9 SDK, then run:
-
-```bash
-dotnet build --configuration Release
-```
-
-The plugin DLL is written to `bin/Release/net9.0/Jellyfin.Plugin.SeerrProxy.dll`.
-
-## Release Metadata
-
-`manifest.json` is updated by the release workflow when a new version is published.
-
+## Build Manually
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development information.
 
 ## Star History
 

@@ -1,4 +1,4 @@
-# Contributing to Jellyfin Seerr Proxy
+# Contributing to *jellyfin-seerr-proxy*
 
 Issues and pull requests are welcome!
 
@@ -54,3 +54,11 @@ dotnet format style --verify-no-changes --severity warn
 - Keep changes focused and minimal
 - Test against a running Jellyfin instance before submitting
 - Describe what your PR changes and why
+
+## Release Metadata
+
+- `manifest.json` is updated by the release workflow when a new version is published.
+
+## Disclose AI/LLM Usage
+
+- In all PR's please disclose to what extent if any AI helped in the solution.
