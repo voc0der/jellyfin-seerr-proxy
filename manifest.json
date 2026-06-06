@@ -6,6 +6,7 @@
     "description": "Authenticated Jellyfin transport for Seerr. Linked Jellyfin users can discover the plugin, call allowlisted Seerr API endpoints through Jellyfin, and submit requests as themselves without receiving Seerr credentials.",
     "owner": "voc0der",
     "overview": "Proxy Seerr API calls through Jellyfin authentication",
+    "imageUrl": "https://raw.githubusercontent.com/voc0der/jellyfin-seerr-proxy/main/icon.png",
     "versions": [
       {
         "version": "1.0.0.5",

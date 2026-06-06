@@ -37,6 +37,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Description =>
         "Authenticated Jellyfin transport for Seerr. Linked Jellyfin users can discover this plugin and call allowlisted Seerr API endpoints through Jellyfin without receiving Seerr credentials.";
 
+    /// <inheritdoc />
+    public override string ImageUrl =>
+        "https://raw.githubusercontent.com/voc0der/jellyfin-seerr-proxy/main/icon.png";
+
     /// <summary>
     /// Gets the active plugin instance.
     /// </summary>
